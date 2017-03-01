@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+  stroke: #000;
+}
+
+</style>
+<body>
+ <script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scaleLinear().range([0, width]);
+
+var y = d3.scaleLinear().range([height, 0]);
+
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+d3.csv("pessoas2.csv", function(error, data) {
+  if (error) throw error;
+
+  data.forEach(function(d) {
+    d.aleatoriedade = +d.aleatoriedade;
+    d.duracao = +d.duracao;
+  });
+
+  x.domain(d3.extent(data, function(d) { return d.aleatoriedade; })).nice();
+  y.domain(d3.extent(data, function(d) { return d.duracao; })).nice();
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x))
+      .append("text")
+        .attr("x", 780)
+        .attr("y", 20)
+        .attr("dy", "0.32em")
+        .attr("fill", "#000")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "start")
+        .text("Aleatoriedade das Pessoas");
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(d3.axisLeft(y))
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 10)
+      .attr("x", -240)
+      .attr("dy", "0.32em")
+      .attr("fill", "#000")
+      .attr("font-weight", "bold")
+      .attr("text-anchor", "start")
+      .text("Tempo de resposta do Formulário (tempo em log10)")
+
+  svg.selectAll(".dot")
+      .data(data)
+    .enter().append("circle")
+      .attr("class", "dot")
+      .attr("r", 3.5)
+      .attr("cx", function(d) { return x(d.aleatoriedade); })
+      .attr("cy", function(d) { return y(d.duracao); })
+      .style("fill", function(d) { return color(d.velocidade); });
+
+  var legend = svg.selectAll(".legend")
+      .data(color.domain())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  legend.append("rect")
+      .attr("x", width - 18)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+  legend.append("text")
+      .attr("x", width - 24)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d; });
+
+});
+
+</script>
+
+<html>
+<body>
+<h1>Será que existe alguma relação entre a duração e o quanto o usuário acha que foi aleatório?</h1>
+
+<h3>Para melhor responder essa pergunta fiz as seguintes modificações nos dados:</h3>
+<ul style="list-style-type:disc">
+  <li>Crie a variável velocidade usando os quartis como referência, se a pessoa responder com
+    um tempo dentro do 1 quartil eles serão classificada como rápida, se estiver entre 2 até 3
+    quartil e classifica como normal, acima disso como lenta;
+</li>
+  <li>Para melhor mostrar a distribuição do tempo foi aplicado log10(), na variável duração que
+    indica o tempo gasto pela pessoa no preenchimento do formulário.
+</li>
+</ul>
+<h3>Melhoria no grafico:</h3>
+<ul style="list-style-type:disc">
+  <li>Adição da variável velocidade representado pela cor nos ,pontos;</li>
+  <li>Foi mudado a ordem dos eixos , (x e y), do gráfico em relação ao gráfico original;</li>
+  <li>Adição de labels nos eixos para facilitar o entendimento dos mesmo.</li>
+</ul>
+
+
+
+</body>
+</html>
